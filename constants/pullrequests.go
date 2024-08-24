@@ -1,0 +1,7 @@
+package constants
+
+const PULLREQUEST_OPEN = "OPEN"
+const PULLREQUEST_MERGED = "MERGED"
+const PULLREQUEST_DECLIEND = "DECLIEND"
+
+
