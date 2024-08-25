@@ -1,9 +1,11 @@
+project_name: bitbucket 
 version: 2
 
 before:
   hooks:
     - go mod tidy
     - go generate ./...
+    - ./scripts/completions.sh
 
 builds:
   - env:
@@ -34,3 +36,28 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+
+
+nfpms:
+  - license: MIT
+    maintainer: 'Yousef yousef@ysph.tech'
+    homepage: https://github.com/ysph-tech/bitbucket-cli
+    dependencies:
+      - git
+    description: Bitbucket client command line tool.
+    formats:
+      - deb
+      - rpm
+    contents:
+      - src: ./completions/bitbucket.bash
+        dst: /usr/share/bash-completion/completions/bitbucket
+        file_info:
+          mode: 0644
+      - src: ./completions/bitbucket.fish
+        dst: /usr/share/fish/vendor_completions.d/bitbucket.fish
+        file_info:
+          mode: 0644
+      - src: ./completions/bitbucket.zsh
+        dst: /usr/share/zsh/vendor-completions/_bitbucket
+        file_info:
+          mode: 0644
