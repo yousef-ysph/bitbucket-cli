@@ -29,12 +29,12 @@ func GetConfig() (Config, error) {
 		return configuration, err
 	}
 
-	file, file_err := os.Open(homeDirectory + "/.bitbucketcmd")
+	file, fileErr := os.Open(homeDirectory + "/.bitbucketcmd")
 	defer file.Close()
-	if file_err != nil {
+	if fileErr != nil {
 
-		fmt.Println("error:", file_err)
-		return configuration, file_err
+		fmt.Println("error:", fileErr)
+		return configuration, fileErr
 	}
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&configuration)
@@ -59,12 +59,12 @@ type BitbucketFileConfig struct {
 
 func GetPipelineNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 
-	file, file_err := os.Open("bitbucket-pipelines.yml")
+	file, fileErr := os.Open("bitbucket-pipelines.yml")
 	var configFile BitbucketFileConfig
 
 	pipelines := []string{}
 	defer file.Close()
-	if file_err != nil {
+	if fileErr != nil {
 
 		return pipelines, cobra.ShellCompDirectiveError
 
@@ -95,10 +95,10 @@ func GetPipelineNames(cmd *cobra.Command, args []string, toComplete string) ([]s
 }
 
 func HttpRequestWithBitbucketAuth(method string, path string, data any, contentType string) (http.Response, error) {
-	config, config_err := GetConfig()
-	if config_err != nil {
-		log.Fatal(config_err)
-		return http.Response{}, config_err
+	config, configErr := GetConfig()
+	if configErr != nil {
+		log.Fatal(configErr)
+		return http.Response{}, configErr
 	}
 	if config.Token == "" && (config.Password == "" || config.User == "") {
 		log.Fatal("config file is not correct")
@@ -114,11 +114,11 @@ func HttpRequestWithBitbucketAuth(method string, path string, data any, contentT
 	if reflect.TypeOf(data).String() == "[]uint8" {
 		postBody = data.([]byte)
 	} else {
-		var json_err error = nil
-		postBody, json_err = json.Marshal(data)
-		if json_err != nil {
-			log.Fatal(json_err)
-			return http.Response{}, json_err
+		var jsonErr error = nil
+		postBody, jsonErr = json.Marshal(data)
+		if jsonErr != nil {
+			log.Fatal(jsonErr)
+			return http.Response{}, jsonErr
 		}
 
 	}
@@ -133,8 +133,8 @@ func HttpRequestWithBitbucketAuth(method string, path string, data any, contentT
 		req.Header.Set("Accept", contentType)
 	}
 	client := &http.Client{}
-	response, response_err := client.Do(req)
-	return *response, response_err
+	response, responseErr := client.Do(req)
+	return *response, responseErr
 }
 func HttpRequestWithBitbucketAuthJson(method string, path string, data any) (http.Response, error) {
 	return HttpRequestWithBitbucketAuth(method, path, data, "application/json")
