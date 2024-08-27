@@ -196,6 +196,7 @@ var pullRequestsCmd = &cobra.Command{
 }
 
 func init() {
+	pullRequestsCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")
 	pullRequestsCmd.Flags().StringP("page", "p", "", "Page number for pullreuest pagination")
 	pullRequestsCmd.Flags().StringP("state", "s", "", "Pull request state")
 	pullRequestCreateCmd.Flags().StringP("source", "s", "", "Pull request source branch")

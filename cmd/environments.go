@@ -83,6 +83,7 @@ var environmentCmd = &cobra.Command{
 }
 
 func init() {
+	environmentCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")
 	environmentCmd.Flags().BoolP("grouped", "g", true, "Group enviroments by type")
 	environmentCmd.Flags().StringP("page", "p", "", "Page number for environments pagination")
 
