@@ -119,26 +119,35 @@ func getPullRequestDetails(cmd *cobra.Command, args []string) {
 		fmt.Println(cliformat.Error("No repo provided and current directory doesn't have a git remote repo"))
 		return
 	}
-	url := ""
+	activityUrl := repo + "/pullrequests/" + args[0] + "/activity?pagelen=50&sort=-created_on"
+	detailsUrl := repo + "/pullrequests/" + args[0]
+
+	activityResp, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", activityUrl, map[string]string{})
+	detailsResp, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", detailsUrl, map[string]string{})
+	defer activityResp.Body.Close()
+	defer detailsResp.Body.Close()
 	if err != nil {
+		fmt.Println(cliformat.Error(err.Error()))
+	}
+
+	if detailsResp.StatusCode != 200 {
+		bodyText, _ := io.ReadAll(detailsResp.Body)
+		fmt.Println(cliformat.Error(string(bodyText)))
 		return
 	}
-	if len(args) > 0 {
-		url = repo + "/pullrequests/" + args[0] + "/activity?pagelen=50&sort=-created_on"
-		resp, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", url, map[string]string{})
-		defer resp.Body.Close()
-		if err != nil {
-			fmt.Println(cliformat.Error(err.Error()))
-		}
-		if resp.StatusCode != 200 {
-			bodyText, _ := io.ReadAll(resp.Body)
-			fmt.Println(cliformat.Error(string(bodyText)))
-			return
-		}
-		var prActivitites formatters.PullRequestActivities
-		json.NewDecoder(resp.Body).Decode(&prActivitites)
-		formatters.FormatPullrequestActivitites(prActivitites)
+
+	if activityResp.StatusCode != 200 {
+		bodyText, _ := io.ReadAll(activityResp.Body)
+		fmt.Println(cliformat.Error(string(bodyText)))
+		return
 	}
+
+	var prActivitites formatters.PullRequestActivities
+	var prDetails formatters.PullRequest
+	json.NewDecoder(activityResp.Body).Decode(&prActivitites)
+	json.NewDecoder(detailsResp.Body).Decode(&prDetails)
+	fmt.Println(formatters.FormatPullrequest(prDetails))
+	formatters.FormatPullrequestActivitites(prActivitites)
 
 }
 
@@ -175,7 +184,7 @@ func listPullRequests(cmd *cobra.Command) {
 	}
 	var pullrequests formatters.PullRequestsResponse
 	json.NewDecoder(resp.Body).Decode(&pullrequests)
-	formatters.FormatPullrequest(pullrequests)
+	formatters.FormatPullrequestResponse(pullrequests)
 
 }
 

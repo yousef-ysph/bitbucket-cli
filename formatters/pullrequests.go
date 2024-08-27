@@ -305,7 +305,7 @@ type PullRequestActivities struct {
 	Values []StateUpdate `json:"values"`
 }
 
-func formatPullrequest(pullrequest PullRequest) string {
+func FormatPullrequest(pullrequest PullRequest) string {
 
 	state := pullrequest.State
 	if state == constants.PULLREQUEST_MERGED {
@@ -326,10 +326,10 @@ func formatPullrequest(pullrequest PullRequest) string {
 	return fmt.Sprintf("%s %s %s %s \n%s\n%s\n", cliformat.RightPad(createdBy, 20, " "), createdOn, updatedOn, state, branches, url)
 }
 
-func FormatPullrequest(pullrequests PullRequestsResponse) {
+func FormatPullrequestResponse(pullrequests PullRequestsResponse) {
 
 	for i := 0; i < len(pullrequests.Values); i++ {
-		fmt.Println(formatPullrequest(pullrequests.Values[i]))
+		fmt.Println(FormatPullrequest(pullrequests.Values[i]))
 	}
 }
 
@@ -337,24 +337,19 @@ func formatPullRequestState(prStateUpdate StateUpdate) string {
 	state := ""
 	description := ""
 	date := time.Now()
-	if !prStateUpdate.Update.Date.IsZero() {
-		state = "UPDATE"
-		description = prStateUpdate.Update.Author.DisplayName
-		date = prStateUpdate.Update.Date
-	}
 	if !prStateUpdate.Approval.Date.IsZero() {
-		state = "APPROVAL"
+		state = cliformat.Success("Approved")
 		description = prStateUpdate.Approval.User.DisplayName
 		date = prStateUpdate.Approval.Date
 	}
 	if !prStateUpdate.ChangesRequested.Date.IsZero() {
-		state = "CHANGES_REQUESTED"
+		state = cliformat.Info("Changes requested")
 		description = prStateUpdate.ChangesRequested.User.DisplayName
 		date = prStateUpdate.ChangesRequested.Date
 
 	}
 	if !prStateUpdate.Comment.CreatedOn.IsZero() {
-		state = "COMMENT"
+		state = cliformat.BlueState("Comment")
 		description = prStateUpdate.Comment.Content.Raw
 		date = prStateUpdate.Comment.CreatedOn
 	}
@@ -364,8 +359,36 @@ func formatPullRequestState(prStateUpdate StateUpdate) string {
 
 }
 func FormatPullrequestActivitites(prActivities PullRequestActivities) {
+	approved := 0
+	changedRequested := 0
+	comments := 0
+	approvedItems := ""
+	changedRequestedItems := ""
+	commentsItems := ""
 
 	for i := 0; i < len(prActivities.Values); i++ {
-		fmt.Println(formatPullRequestState(prActivities.Values[i]))
+		if !prActivities.Values[i].Approval.Date.IsZero() {
+			approved += 1
+			approvedItems += formatPullRequestState(prActivities.Values[i]) + "\n"
+		}
+		if !prActivities.Values[i].ChangesRequested.Date.IsZero() {
+			changedRequested += 1
+
+			changedRequestedItems += formatPullRequestState(prActivities.Values[i]) + "\n"
+		}
+		if !prActivities.Values[i].Comment.CreatedOn.IsZero() {
+			comments += 1
+			commentsItems += formatPullRequestState(prActivities.Values[i]) + "\n"
+
+		}
+
 	}
+	results := cliformat.Success(fmt.Sprintf("%d Approved", approved)) + cliformat.Info(fmt.Sprintf(" %d Changes requested", changedRequested)) + cliformat.BlueState(fmt.Sprintf(" %d Comments", comments))
+
+	fmt.Printf("\n%s\n%s\n%s\n%s\n",
+		commentsItems,
+		changedRequestedItems,
+		approvedItems,
+		results,
+	)
 }

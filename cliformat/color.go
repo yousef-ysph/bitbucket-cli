@@ -89,3 +89,11 @@ func Success(text string) string {
 func Info(text string) string {
 	return BackgroundYellow(InWhite(InBold(text)))
 }
+
+func BackgroundBlue(text string) string {
+	return Colorize(BlueBackground, text)
+}
+func BlueState(text string) string {
+		return BackgroundBlue(InWhite(InBold(text)))
+}
+
