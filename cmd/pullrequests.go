@@ -10,6 +10,7 @@ import (
 	githelper "bitbucket/git"
 	"encoding/json"
 	"fmt"
+
 	"io"
 
 	"github.com/spf13/cobra"
@@ -113,6 +114,7 @@ var pullRequestCreateCmd = &cobra.Command{
 	},
 }
 
+
 func getPullRequestDetails(cmd *cobra.Command, args []string) {
 	repo, err := githelper.GetCurrentRepo(cmd)
 	if err != nil {
@@ -121,31 +123,35 @@ func getPullRequestDetails(cmd *cobra.Command, args []string) {
 	}
 	activityUrl := repo + "/pullrequests/" + args[0] + "/activity?pagelen=50&sort=-created_on"
 	detailsUrl := repo + "/pullrequests/" + args[0]
-
-	activityResp, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", activityUrl, map[string]string{})
-	detailsResp, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", detailsUrl, map[string]string{})
-	defer activityResp.Body.Close()
-	defer detailsResp.Body.Close()
-	if err != nil {
-		fmt.Println(cliformat.Error(err.Error()))
+	activityFetchChan := make(chan bitbucketapi.FetchToChanResponse)
+	detailsFetchChan := make(chan bitbucketapi.FetchToChanResponse)
+	go bitbucketapi.FetchToChannelJson("GET",activityUrl,map[string]string{},activityFetchChan)
+	go bitbucketapi.FetchToChannelJson("GET",detailsUrl,map[string]string{},detailsFetchChan)
+	activityResp := <-activityFetchChan
+	detailsResp := <-detailsFetchChan
+	defer activityResp.Resp.Body.Close()
+	defer detailsResp.Resp.Body.Close()
+	if activityResp.Err != nil || detailsResp.Err != err {
+		fmt.Println(cliformat.Error(activityResp.Err.Error()))
+		fmt.Println(cliformat.Error(detailsResp.Err.Error()))
 	}
 
-	if detailsResp.StatusCode != 200 {
-		bodyText, _ := io.ReadAll(detailsResp.Body)
+	if detailsResp.Resp.StatusCode != 200 {
+		bodyText, _ := io.ReadAll(detailsResp.Resp.Body)
 		fmt.Println(cliformat.Error(string(bodyText)))
 		return
 	}
 
-	if activityResp.StatusCode != 200 {
-		bodyText, _ := io.ReadAll(activityResp.Body)
+	if activityResp.Resp.StatusCode != 200 {
+		bodyText, _ := io.ReadAll(activityResp.Resp.Body)
 		fmt.Println(cliformat.Error(string(bodyText)))
 		return
 	}
 
 	var prActivitites formatters.PullRequestActivities
 	var prDetails formatters.PullRequest
-	json.NewDecoder(activityResp.Body).Decode(&prActivitites)
-	json.NewDecoder(detailsResp.Body).Decode(&prDetails)
+	json.NewDecoder(activityResp.Resp.Body).Decode(&prActivitites)
+	json.NewDecoder(detailsResp.Resp.Body).Decode(&prDetails)
 	fmt.Println(formatters.FormatPullrequest(prDetails))
 	formatters.FormatPullrequestActivitites(prActivitites)
 

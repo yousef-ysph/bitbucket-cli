@@ -139,3 +139,18 @@ func HttpRequestWithBitbucketAuth(method string, path string, data any, contentT
 func HttpRequestWithBitbucketAuthJson(method string, path string, data any) (http.Response, error) {
 	return HttpRequestWithBitbucketAuth(method, path, data, "application/json")
 }
+
+type FetchToChanResponse struct {
+	Resp http.Response
+	Err  error
+}
+
+func FetchToChannel(method string, url string, data any, contentType string, c chan FetchToChanResponse) {
+	var fetchToChannel FetchToChanResponse
+	fetchToChannel.Resp, fetchToChannel.Err = HttpRequestWithBitbucketAuthJson("GET", url, map[string]string{})
+	c <- fetchToChannel
+}
+func FetchToChannelJson(method string, url string, data any, c chan FetchToChanResponse) {
+
+	FetchToChannel(method, url, data, "application/json", c)
+}
