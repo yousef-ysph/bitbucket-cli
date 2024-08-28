@@ -20,7 +20,6 @@ func getEnvPipeline(repo string, id string) formatters.PipelineDetailsResponse {
 	detailsRes, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", repo+"/pipelines/"+id, map[string]string{})
 	defer detailsRes.Body.Close()
 	if err != nil {
-		fmt.Println("PO")
 		return details
 	}
 	json.NewDecoder(detailsRes.Body).Decode(&details)

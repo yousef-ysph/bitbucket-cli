@@ -188,6 +188,92 @@ func listPullRequests(cmd *cobra.Command) {
 
 }
 
+type MergePullRequestsData struct {
+	Type              string `json:"type"`
+	Message           string `json:"message"`
+	CloseSourceBranch bool   `json:"close_source_branch"`
+	MergeStrategy     string `json:"merge_strategy"`
+}
+
+// pipelinesCmd represents the pipelines command
+var mergePullRequestsCmd = &cobra.Command{
+	Use:   "merge",
+	Short: "merge pull-request",
+	Long:  `merge pull-request`,
+
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) == 0 {
+			fmt.Println(cliformat.Error("Pull request id is required"))
+			return
+		}
+		repo, err := githelper.GetCurrentRepo(cmd)
+		var mergePullRequestsCmd MergePullRequestsData
+		mergePullRequestsCmd.CloseSourceBranch, err = cmd.Flags().GetBool("close-source")
+		mergePullRequestsCmd.Message, err = cmd.Flags().GetString("message")
+		mergePullRequestsCmd.MergeStrategy, err = cmd.Flags().GetString("strategy")
+		mergePullRequestsCmd.Type, err = cmd.Flags().GetString("type")
+		requestDataJson, err := json.Marshal(mergePullRequestsCmd)
+
+		if err != nil {
+			fmt.Println(cliformat.Error("No repo provided and current directory doesn't have a git remote repo"))
+			return
+		}
+		url := repo + "/pullrequests/" + args[0] + "/merge"
+
+		resp, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("POST", url, requestDataJson)
+		defer resp.Body.Close()
+		if err != nil {
+			fmt.Println(cliformat.Error(err.Error()))
+		}
+
+		if resp.StatusCode != 200 {
+			bodyText, _ := io.ReadAll(resp.Body)
+			fmt.Println(resp.StatusCode)
+			fmt.Println(cliformat.Error(string(bodyText)))
+			return
+		}
+		fmt.Println(cliformat.Success("PR Merged"))
+
+	},
+}
+
+var declinePullRequestsCmd = &cobra.Command{
+	Use:   "decline",
+	Short: "decline pull-request",
+	Long:  `decline pull-request`,
+
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) == 0 {
+			fmt.Println(cliformat.Error("Pull request id is required"))
+			return
+		}
+		repo, err := githelper.GetCurrentRepo(cmd)
+
+		if err != nil {
+			fmt.Println(cliformat.Error("No repo provided and current directory doesn't have a git remote repo"))
+			return
+		}
+		url := repo + "/pullrequests/" + args[0] + "/decline"
+
+		resp, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("POST", url, map[string]string{})
+		defer resp.Body.Close()
+		if err != nil {
+			fmt.Println(cliformat.Error(err.Error()))
+		}
+
+		if resp.StatusCode != 200 {
+			bodyText, _ := io.ReadAll(resp.Body)
+			fmt.Println(resp.StatusCode)
+			fmt.Println(cliformat.Error(string(bodyText)))
+			return
+		}
+		fmt.Println(cliformat.Success("PR Declined"))
+
+	},
+}
+
 // pipelinesCmd represents the pipelines command
 var pullRequestsCmd = &cobra.Command{
 	Use:   "pr",
@@ -204,6 +290,13 @@ var pullRequestsCmd = &cobra.Command{
 	},
 }
 
+func getStrategies(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+
+	strategies := []string{"merge_commit", "squash", "fast_forward"}
+	return strategies, cobra.ShellCompDirectiveDefault
+
+}
+
 func init() {
 	pullRequestsCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")
 	pullRequestsCmd.Flags().StringP("page", "p", "", "Page number for pullreuest pagination")
@@ -216,5 +309,12 @@ func init() {
 	pullRequestCreateCmd.RegisterFlagCompletionFunc("dest", githelper.GetBranchSuggestions)
 	pullRequestCreateCmd.RegisterFlagCompletionFunc("source", githelper.GetBranchSuggestions)
 	pullRequestsCmd.AddCommand(pullRequestCreateCmd)
+	mergePullRequestsCmd.Flags().StringP("message", "m", "", "Merge pull request message")
+	mergePullRequestsCmd.Flags().StringP("strategy", "s", "", "Merge strategy")
+	mergePullRequestsCmd.Flags().BoolP("close-source", "c", false, "Close source branch")
+	mergePullRequestsCmd.Flags().StringP("type", "t", "type", "Close source branch")
+	mergePullRequestsCmd.RegisterFlagCompletionFunc("strategy", getStrategies)
+	pullRequestsCmd.AddCommand(mergePullRequestsCmd)
+	pullRequestsCmd.AddCommand(declinePullRequestsCmd)
 	rootCmd.AddCommand(pullRequestsCmd)
 }
