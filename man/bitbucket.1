@@ -1,0 +1,365 @@
+.TH "Bitbucket cli" "1" 
+.hy
+.SH Bitbucket CLI
+.PP
+A command line tool to help access the Bitbucket API.
+It brings Pipelines, pull requests and other Bitbucket features to the
+terminal.
+All which come with command completion
+.SH Downloads
+.PP
+Releases (https://github.com/ysph-tech/bitbucket-cli/releases)
+.SH Features
+.SS Overview
+.PP
+All commands that run on repos will automaticlly asign the repo to
+current directory remote origin.
+Other wise you can use the \[en]repo flag to set a repo
+.SS Pipelines
+.SS List Pipelines
+.PP
+List pipelines
+.PP
+\f[B]Usage\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pipelines
+bitbucket pipelines -p 2
+\f[R]
+.fi
+.PP
+\f[B]Flags\f[R]
+.PP
+.TS
+tab(@);
+l l l.
+T{
+Name
+T}@T{
+Description
+T}@T{
+Default
+T}
+_
+T{
+\f[C]--page\f[R] \f[C]-p\f[R]
+T}@T{
+Current page pagination
+T}@T{
+1
+T}
+.TE
+.SS Pipeline details
+.PP
+Fetches pipeline details Usage
+.IP
+.nf
+\f[C]
+bitbucket pipelines $PIPELINE_ID
+\f[R]
+.fi
+.PP
+\f[B]Example\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pipelines 12 
+bitbucket pipelines 12 -d #For detailed view including script 
+\f[R]
+.fi
+.PP
+You can use the pipeline uuid or build number
+.PP
+.TS
+tab(@);
+l l l.
+T{
+Name
+T}@T{
+Description
+T}@T{
+Default
+T}
+_
+T{
+\f[C]--detailed\f[R] \f[C]-d\f[R]
+T}@T{
+Includes pipeline scripts steps
+T}@T{
+1
+T}
+.TE
+.SS Run pipeline
+.PP
+You can run a pipeline by specifying the pipeline using the
+\f[C]--pipeline\f[R] \f[C]-p\f[R] flag and which branch
+(\f[C]--branch\f[R] \f[C]-b\f[R]) or which commit (\f[C]--commit\f[R]
+\f[C]-c\f[R]) to run it on
+.PP
+\f[B]Example\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pipelines run -p deploy-to-staging -b master
+bitbucket pipelines run -p custom:deploy-to-staging -c cba0e8d21da448f1264351ba2ebe5545958aa2ab
+\f[R]
+.fi
+.PP
+If the pipeline is custom it can be named without a prefix If it is
+triggered by a tag or branch you can specify it by adding the tirgger as
+prefix
+.IP
+.nf
+\f[C]
+bitbucket pipelines run -p branches:deploy-from-master -b master
+bitbucket pipelines run -p tags:release-to-prod -c cba0e8d21da448f1264351ba2ebe5545958aa2ab
+\f[R]
+.fi
+.PP
+.TS
+tab(@);
+lw(12.7n) lw(38.2n) lw(19.1n).
+T{
+Name
+T}@T{
+Description
+T}@T{
+Example
+T}
+_
+T{
+\f[C]--pipeline\f[R] \f[C]-p\f[R]
+T}@T{
+Pipeline name
+T}@T{
+deploy-to-staging
+T}
+T{
+\f[C]--branch\f[R] \f[C]-b\f[R]
+T}@T{
+Targeted branch name
+T}@T{
+master
+T}
+T{
+\f[C]--commit\f[R] \f[C]-c\f[R]
+T}@T{
+Targeted commit name
+T}@T{
+cba0e8d21da448f1264351ba2ebe5545958aa2ab
+T}
+T{
+\f[C]--variables\f[R] \f[C]-v\f[R]
+T}@T{
+Targeted commit name
+T}@T{
+[{ \[lq]key\[rq]: \[lq]var1key\[rq], \[lq]value\[rq]:
+\[lq]var1value\[rq], \[lq]secured\[rq]: true}]
+T}
+.TE
+.SS Pipeline Step
+.PP
+Gets pipeline\[cq]s step log
+.PP
+\f[B]Usage\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pipelines step -p $PIPELINE_ID -s $STEP_ID 
+\f[R]
+.fi
+.PP
+\f[B]Flags\f[R]
+.PP
+.TS
+tab(@);
+l l l.
+T{
+Name
+T}@T{
+Description
+T}@T{
+Example
+T}
+_
+T{
+\f[C]--pipeline\f[R] \f[C]-p\f[R]
+T}@T{
+Pipeline Id or build number
+T}@T{
+1
+T}
+T{
+\f[C]--step\f[R] \f[C]-s\f[R]
+T}@T{
+step uuid
+T}@T{
+{1791efee-9e20-4c60-8a6a-bc1b071a15cc}
+T}
+.TE
+.SS Stop Pipeline
+.PP
+Stop pipeline
+.PP
+\f[B]Usage\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pipelines stop $PIPELINE_ID
+\f[R]
+.fi
+.SS Pull requests
+.SS List Pull requests
+.PP
+Lists pull requests
+.PP
+\f[B]Usage\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pr
+bitbucket pr -p $PAGE_NUMBER
+bitbucket pr -s MERGED
+\f[R]
+.fi
+.PP
+\f[B]Flags\f[R]
+.PP
+.TS
+tab(@);
+l l l.
+T{
+Name
+T}@T{
+Description
+T}@T{
+Default
+T}
+_
+T{
+\f[C]--page\f[R] \f[C]-p\f[R]
+T}@T{
+Current page pagination
+T}@T{
+1
+T}
+T{
+\f[C]--state\f[R] \f[C]-s\f[R]
+T}@T{
+PR state
+T}@T{
+OPEN
+T}
+.TE
+.SS Pull request details
+.PP
+Fetches pull request details
+.PP
+\f[B]Usage\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pr $PR_ID
+\f[R]
+.fi
+.PP
+\f[B]Example\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pr 12 
+bitbucket pr 12 -d #For detailed view including script 
+\f[R]
+.fi
+.SS Pull request Merge
+.PP
+Merges pull request
+.PP
+\f[B]Usage\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pr merge $PR_ID
+bitbucket pr merge $PR_ID -m $MERGE_MESSAGE
+bitbucket pr merge $PR_ID -s $MERGE_STRATEGY #specifying merge strategy [fast_forward, merge_commit, squash]
+bitbucket pr merge $PR_ID -c #closes source
+\f[R]
+.fi
+.PP
+\f[B]Example\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pr merge 12 
+bitbucket pr merge 12 -c 
+bitbucket pr merge 12 -m \[dq]Closing message\[dq] 
+\f[R]
+.fi
+.PP
+\f[B]Flags\f[R]
+.PP
+.TS
+tab(@);
+l l l.
+T{
+Name
+T}@T{
+Description
+T}@T{
+Default
+T}
+_
+T{
+\f[C]--message\f[R] \f[C]-m\f[R]
+T}@T{
+Merge message
+T}@T{
+\[cq]\[cq]
+T}
+T{
+\f[C]--strategy\f[R] \f[C]-s\f[R]
+T}@T{
+Merge strategy
+T}@T{
+OPEN
+T}
+T{
+\f[C]--close-source\f[R] \f[C]-c\f[R]
+T}@T{
+Close source
+T}@T{
+false
+T}
+.TE
+.SS Pull request decline
+.PP
+Declines a pull request
+.PP
+\f[B]Usage\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pr decline $PR_ID
+\f[R]
+.fi
+.PP
+\f[B]Example\f[R]
+.IP
+.nf
+\f[C]
+bitbucket pr decline 12 
+\f[R]
+.fi
+.SS Environments
+.SS List Environments
+.PP
+Lists Environments
+.PP
+\f[B]Usage\f[R]
+.IP
+.nf
+\f[C]
+bitbucket envs
+\f[R]
+.fi
