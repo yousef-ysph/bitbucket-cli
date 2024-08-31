@@ -16,9 +16,9 @@ import (
 )
 
 type Config struct {
-	Password string
-	User     string
-	Token    string
+	Password string `json:"password"`
+	User     string `json:"user"`
+	Token    string `json:"token"`
 }
 
 func GetConfig() (Config, error) {
@@ -29,7 +29,7 @@ func GetConfig() (Config, error) {
 		return configuration, err
 	}
 
-	file, fileErr := os.Open(homeDirectory + "/.bitbucketcmd")
+	file, fileErr := os.Open(homeDirectory + "/.bitbucketcmd.json")
 	defer file.Close()
 	if fileErr != nil {
 
