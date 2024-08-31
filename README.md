@@ -9,6 +9,30 @@ A command line tool to help access the Bitbucket API. It brings Pipelines, pull 
 
 # Features
 
+## Getting started
+
+After installation you need to add your username (not email) and bitbucket generated password in your config file `%HOMEDIR%/.bitbucketcmd.json`
+
+[Create password](https://bitbucket.org/account/settings/app-passwords/)
+
+```json
+{
+  "password": "",
+  "user": ""
+}
+```
+or via repo access token
+[https://bitbucket.org/$REPO/admin/access-tokens](https://bitbucket.org/$REPO/admin/access-tokens)
+```json
+{
+    "token":""
+}
+```
+Permission should be to have `READ/WRITE` for pipelines, pull-requests
+
+https://developer.atlassian.com/cloud/bitbucket/rest/intro/#authentication
+
+
 ## Overview
 
 All commands that run on repos will automaticlly asign the repo to current directory remote origin. Other wise you can use the --repo flag to set a repo
