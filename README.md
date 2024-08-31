@@ -13,6 +13,13 @@ A command line tool to help access the Bitbucket API. It brings Pipelines, pull 
 
 After installation you need to add your username (not email) and bitbucket generated password in your config file `%HOMEDIR%/.bitbucketcmd.json`
 
+You can use the setup commandline to input the values instead of editing the file directly 
+
+```bash
+bitbucket setup password
+bitbucket setup token
+```
+
 [Create password](https://bitbucket.org/account/settings/app-passwords/)
 
 ```json

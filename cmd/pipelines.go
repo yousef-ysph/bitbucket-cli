@@ -1,6 +1,7 @@
 /*
-Copyright © 2024 NAME HERE yousef@ysph.tech
+Copyright © 2024 yousef@ysph.tech
 */
+
 package cmd
 
 import (

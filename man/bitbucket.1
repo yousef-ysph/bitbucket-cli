@@ -1,6 +1,5 @@
-.TH "Bitbucket cli" "1" 
+.TH "Bitbucket cli" "1"
 .hy
-.SH Bitbucket CLI
 .PP
 A command line tool to help access the Bitbucket API.
 It brings Pipelines, pull requests and other Bitbucket features to the
@@ -10,6 +9,48 @@ All which come with command completion
 .PP
 Releases (https://github.com/ysph-tech/bitbucket-cli/releases)
 .SH Features
+.SS Getting started
+.PP
+After installation you need to add your username (not email) and
+bitbucket generated password in your config file
+\f[C]%HOMEDIR%/.bitbucketcmd.json\f[R]
+.PP
+You can use the setup commandline to input the values instead of editing
+the file directly
+.IP
+.nf
+\f[C]
+bitbucket setup password
+bitbucket setup token
+\f[R]
+.fi
+.PP
+Create password (https://bitbucket.org/account/settings/app-passwords/)
+.IP
+.nf
+\f[C]
+{
+  \[dq]password\[dq]: \[dq]\[dq],
+  \[dq]user\[dq]: \[dq]\[dq]
+}
+\f[R]
+.fi
+.PP
+or via repo access token
+<https://bitbucket.org/$REPO/admin/access-tokens>
+.IP
+.nf
+\f[C]
+{
+    \[dq]token\[dq]:\[dq]\[dq]
+}
+\f[R]
+.fi
+.PP
+Permission should be to have \f[C]READ/WRITE\f[R] for pipelines,
+pull-requests
+.PP
+https://developer.atlassian.com/cloud/bitbucket/rest/intro/#authentication
 .SS Overview
 .PP
 All commands that run on repos will automaticlly asign the repo to
