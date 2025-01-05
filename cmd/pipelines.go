@@ -44,10 +44,13 @@ func listPipelines(cmd *cobra.Command) {
 
 	var res formatters.PipelinesResponse
 	json.NewDecoder(resp.Body).Decode(&res)
-	formatters.FormatPipelines(res)
 
+	isCustomFormat, err := formatters.CustomFormat(cmd, res)
 	if err != nil {
 		cliformat.Error(err.Error())
+	}
+	if !isCustomFormat {
+		formatters.FormatPipelines(res)
 	}
 }
 
@@ -105,9 +108,15 @@ func getPipeline(cmd *cobra.Command, args []string) {
 	var steps formatters.PipelineStepsResponse
 	json.NewDecoder(detailsRes.Body).Decode(&details)
 	json.NewDecoder(stepsRes.Body).Decode(&steps)
-	formatters.FormatPipelineDetailsWithSteps(details, steps, cmd.Flag("detailed").Changed)
 	if err != nil {
 		cliformat.Error(err.Error())
+	}
+	isCustomFormat, err := formatters.CustomFormat(cmd, details)
+	if err != nil {
+		cliformat.Error(err.Error())
+	}
+	if !isCustomFormat {
+		formatters.FormatPipelineDetailsWithSteps(details, steps, cmd.Flag("detailed").Changed)
 	}
 
 }
@@ -306,6 +315,7 @@ var stopPipelineCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(pipelinesCmd)
 	pipelinesCmd.Flags().StringP("page", "p", "", "Page number for pipelines pagination")
+	pipelinesCmd.Flags().StringP("format", "f", "", "Output template format")
 	pipelinesCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")
 	pipelinesCmd.Flags()
 	pipelinesCmd.Flags().BoolP("detailed", "d", false, "Detailed pipeline steps with commands")

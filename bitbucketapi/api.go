@@ -28,12 +28,12 @@ func GetConfig() (Config, error) {
 		log.Fatal(err)
 		return configuration, err
 	}
-
-	file, fileErr := os.Open(homeDirectory + "/.bitbucketcmd.json")
+	filePath := homeDirectory + "/.bitbucketcmd.json"
+	file, fileErr := os.Open(filePath)
 	defer file.Close()
 	if fileErr != nil {
 
-		fmt.Println("error:", fileErr)
+		fmt.Println("Error: ", filePath, "is missconfigured try `bitbucket setup`", fileErr)
 		return configuration, fileErr
 	}
 	decoder := json.NewDecoder(file)
