@@ -76,7 +76,16 @@ var environmentCmd = &cobra.Command{
 		for j := 0; j < len(envResJson.Values); j++ {
 			envResJson.Values[j].Pipeline = pipelineMap[envResJson.Values[j].Lock.Triggerer.PipelineUUID]
 		}
-		fmt.Println(formatters.FormatEnvs(envResJson, grouped))
+
+		isCustomFormat, err := formatters.CustomFormat(cmd, envResJson, "Values")
+
+		if err != nil {
+			fmt.Println(cliformat.Error(err.Error()))
+		}
+
+		if !isCustomFormat {
+			fmt.Println(formatters.FormatEnvs(envResJson, grouped))
+		}
 
 	},
 }
@@ -85,6 +94,7 @@ func init() {
 	environmentCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")
 	environmentCmd.Flags().BoolP("grouped", "g", true, "Group enviroments by type")
 	environmentCmd.Flags().StringP("page", "p", "", "Page number for environments pagination")
+	environmentCmd.Flags().StringP("format", "f", "", "Output template format")
 
 	rootCmd.AddCommand(environmentCmd)
 

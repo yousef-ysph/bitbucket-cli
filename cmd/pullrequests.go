@@ -114,7 +114,6 @@ var pullRequestCreateCmd = &cobra.Command{
 	},
 }
 
-
 func getPullRequestDetails(cmd *cobra.Command, args []string) {
 	repo, err := githelper.GetCurrentRepo(cmd)
 	if err != nil {
@@ -125,8 +124,8 @@ func getPullRequestDetails(cmd *cobra.Command, args []string) {
 	detailsUrl := repo + "/pullrequests/" + args[0]
 	activityFetchChan := make(chan bitbucketapi.FetchToChanResponse)
 	detailsFetchChan := make(chan bitbucketapi.FetchToChanResponse)
-	go bitbucketapi.FetchToChannelJson("GET",activityUrl,map[string]string{},activityFetchChan)
-	go bitbucketapi.FetchToChannelJson("GET",detailsUrl,map[string]string{},detailsFetchChan)
+	go bitbucketapi.FetchToChannelJson("GET", activityUrl, map[string]string{}, activityFetchChan)
+	go bitbucketapi.FetchToChannelJson("GET", detailsUrl, map[string]string{}, detailsFetchChan)
 	activityResp := <-activityFetchChan
 	detailsResp := <-detailsFetchChan
 	defer activityResp.Resp.Body.Close()
@@ -152,8 +151,16 @@ func getPullRequestDetails(cmd *cobra.Command, args []string) {
 	var prDetails formatters.PullRequest
 	json.NewDecoder(activityResp.Resp.Body).Decode(&prActivitites)
 	json.NewDecoder(detailsResp.Resp.Body).Decode(&prDetails)
-	fmt.Println(formatters.FormatPullrequest(prDetails))
-	formatters.FormatPullrequestActivitites(prActivitites)
+	isCustomFormat, err := formatters.CustomFormat(cmd, prDetails, "")
+
+	if err != nil {
+		fmt.Println(cliformat.Error(err.Error()))
+	}
+
+	if !isCustomFormat {
+		fmt.Println(formatters.FormatPullrequest(prDetails))
+		formatters.FormatPullrequestActivitites(prActivitites)
+	}
 
 }
 
@@ -190,7 +197,15 @@ func listPullRequests(cmd *cobra.Command) {
 	}
 	var pullrequests formatters.PullRequestsResponse
 	json.NewDecoder(resp.Body).Decode(&pullrequests)
-	formatters.FormatPullrequestResponse(pullrequests)
+	isCustomFormat, err := formatters.CustomFormat(cmd, pullrequests, "Values")
+
+	if err != nil {
+		fmt.Println(cliformat.Error(err.Error()))
+	}
+
+	if !isCustomFormat {
+		formatters.FormatPullrequestResponse(pullrequests)
+	}
 
 }
 
@@ -306,6 +321,7 @@ func getStrategies(cmd *cobra.Command, args []string, toComplete string) ([]stri
 func init() {
 	pullRequestsCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")
 	pullRequestsCmd.Flags().StringP("page", "p", "", "Page number for pullreuest pagination")
+	pullRequestsCmd.Flags().StringP("format", "f", "", "Output template format")
 	pullRequestsCmd.Flags().StringP("state", "s", "", "Pull request state")
 	pullRequestCreateCmd.Flags().StringP("source", "s", "", "Pull request source branch")
 	pullRequestCreateCmd.Flags().StringP("title", "t", "", "Pull request title")

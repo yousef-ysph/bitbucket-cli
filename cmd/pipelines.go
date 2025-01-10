@@ -45,7 +45,7 @@ func listPipelines(cmd *cobra.Command) {
 	var res formatters.PipelinesResponse
 	json.NewDecoder(resp.Body).Decode(&res)
 
-	isCustomFormat, err := formatters.CustomFormat(cmd, res)
+	isCustomFormat, err := formatters.CustomFormat(cmd, res, "Values")
 	if err != nil {
 		cliformat.Error(err.Error())
 	}
@@ -111,7 +111,7 @@ func getPipeline(cmd *cobra.Command, args []string) {
 	if err != nil {
 		cliformat.Error(err.Error())
 	}
-	isCustomFormat, err := formatters.CustomFormat(cmd, details)
+	isCustomFormat, err := formatters.CustomFormat(cmd, details, "")
 	if err != nil {
 		cliformat.Error(err.Error())
 	}

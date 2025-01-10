@@ -1,13 +1,12 @@
 package formatters
 
 import (
+	"github.com/spf13/cobra"
 	"os"
 	"text/template"
-
-	"github.com/spf13/cobra"
 )
 
-func CustomFormat(cmd *cobra.Command, res any) (bool, error) {
+func CustomFormat(cmd *cobra.Command, res any,rangeTemplate string) (bool, error) {
 
 	customFormat, err := cmd.Flags().GetString("format")
 	if err != nil {
@@ -16,6 +15,9 @@ func CustomFormat(cmd *cobra.Command, res any) (bool, error) {
 
 	if customFormat == "" {
 		return false, err
+	}
+	if rangeTemplate != "" {
+		customFormat = "{{ range ." + rangeTemplate + "}}" + customFormat + "{{end}}"
 	}
 	customOutputTemplate, err := template.New("customFormat").Parse(customFormat)
 	if err != nil {
