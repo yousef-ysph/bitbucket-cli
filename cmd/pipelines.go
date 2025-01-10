@@ -316,6 +316,7 @@ func init() {
 	rootCmd.AddCommand(pipelinesCmd)
 	pipelinesCmd.Flags().StringP("page", "p", "", "Page number for pipelines pagination")
 	pipelinesCmd.Flags().StringP("format", "f", "", "Output template format")
+	pipelinesCmd.Flags().BoolP("json", "j", false, "Output as json")
 	pipelinesCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")
 	pipelinesCmd.Flags()
 	pipelinesCmd.Flags().BoolP("detailed", "d", false, "Detailed pipeline steps with commands")

@@ -322,6 +322,7 @@ func init() {
 	pullRequestsCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")
 	pullRequestsCmd.Flags().StringP("page", "p", "", "Page number for pullreuest pagination")
 	pullRequestsCmd.Flags().StringP("format", "f", "", "Output template format")
+	pullRequestsCmd.Flags().BoolP("json", "j", false, "Output as json")
 	pullRequestsCmd.Flags().StringP("state", "s", "", "Pull request state")
 	pullRequestCreateCmd.Flags().StringP("source", "s", "", "Pull request source branch")
 	pullRequestCreateCmd.Flags().StringP("title", "t", "", "Pull request title")
