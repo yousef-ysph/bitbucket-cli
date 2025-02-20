@@ -7,6 +7,7 @@ package cmd
 import (
 	"bitbucket/bitbucketapi"
 	"bitbucket/cliformat"
+	"bitbucket/constants"
 	"bitbucket/formatters"
 	githelper "bitbucket/git"
 	"encoding/json"
@@ -53,6 +54,22 @@ func listPipelines(cmd *cobra.Command) {
 		formatters.FormatPipelines(res)
 	}
 }
+func getStepLogById(repo string, pipelineId string, stepUUID string) {
+	detailsRes, err := bitbucketapi.HttpRequestWithBitbucketAuth("GET", repo+"/pipelines/"+pipelineId+"/steps/"+stepUUID+"/log", map[string]string{}, "")
+	defer detailsRes.Body.Close()
+	if err != nil {
+		cliformat.Error(err.Error())
+	}
+	if detailsRes.StatusCode != 200 {
+		bodyText, _ := io.ReadAll(detailsRes.Body)
+		fmt.Println(cliformat.Error(string(bodyText)))
+		return
+	}
+
+	bodyText, _ := io.ReadAll(detailsRes.Body)
+	fmt.Println(string(bodyText))
+
+}
 
 var getPipelineStep = &cobra.Command{
 	Use:   "step",
@@ -76,21 +93,19 @@ var getPipelineStep = &cobra.Command{
 			cliformat.Error(err.Error())
 		}
 
-		detailsRes, err := bitbucketapi.HttpRequestWithBitbucketAuth("GET", repo+"/pipelines/"+pipelineId+"/steps/"+stepUUID+"/log", map[string]string{}, "")
-		defer detailsRes.Body.Close()
-		if err != nil {
-			cliformat.Error(err.Error())
-		}
-		if detailsRes.StatusCode != 200 {
-			bodyText, _ := io.ReadAll(detailsRes.Body)
-			fmt.Println(cliformat.Error(string(bodyText)))
-			return
-		}
-
-		bodyText, _ := io.ReadAll(detailsRes.Body)
-		fmt.Println(string(bodyText))
-
+		getStepLogById(repo, pipelineId, stepUUID)
 	},
+}
+
+func getStepLogByStatus(repo string, pipelineId string, steps formatters.PipelineStepsResponse, state string) bool {
+	for stepIndex := 0; stepIndex < len(steps.Values); stepIndex++ {
+		if steps.Values[stepIndex].State.Result.Name == state {
+			getStepLogById(repo, pipelineId, steps.Values[stepIndex].UUID)
+			return true
+		}
+	}
+	return false
+
 }
 
 func getPipeline(cmd *cobra.Command, args []string) {
@@ -101,13 +116,20 @@ func getPipeline(cmd *cobra.Command, args []string) {
 	}
 	pipelineId := args[0]
 	stepsRes, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", repo+"/pipelines/"+pipelineId+"/steps", map[string]string{})
+	var steps formatters.PipelineStepsResponse
+	json.NewDecoder(stepsRes.Body).Decode(&steps)
+	state, err := cmd.Flags().GetString("state")
+	if state != "" {
+		if getStepLogByStatus(repo, pipelineId, steps, state) {
+			return
+		}
+	}
+
 	detailsRes, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", repo+"/pipelines/"+pipelineId, map[string]string{})
 	defer stepsRes.Body.Close()
 	defer detailsRes.Body.Close()
 	var details formatters.PipelineDetailsResponse
-	var steps formatters.PipelineStepsResponse
 	json.NewDecoder(detailsRes.Body).Decode(&details)
-	json.NewDecoder(stepsRes.Body).Decode(&steps)
 	if err != nil {
 		cliformat.Error(err.Error())
 	}
@@ -312,9 +334,16 @@ var stopPipelineCmd = &cobra.Command{
 	},
 }
 
+func getStepStates(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+
+	strategies := []string{constants.PIPELINE_FAILED, constants.PIPELINE_COMPLETED, constants.PIPELINE_IN_PROGRESS, constants.PIPELINE_SUCCESSFUL}
+	return strategies, cobra.ShellCompDirectiveDefault
+
+}
 func init() {
 	rootCmd.AddCommand(pipelinesCmd)
 	pipelinesCmd.Flags().StringP("page", "p", "", "Page number for pipelines pagination")
+	pipelinesCmd.Flags().StringP("state", "s", "", "Stop by step with state {FAILED|IN_PROGRESS|SUCCESSFUL|COMPLETED}")
 	pipelinesCmd.Flags().StringP("format", "f", "", "Output template format")
 	pipelinesCmd.Flags().BoolP("json", "j", false, "Output as json")
 	pipelinesCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")
@@ -327,6 +356,7 @@ func init() {
 
 	runPipelineCmd.RegisterFlagCompletionFunc("branch", githelper.GetBranchSuggestions)
 	runPipelineCmd.RegisterFlagCompletionFunc("pipeline", bitbucketapi.GetPipelineNames)
+	runPipelineCmd.RegisterFlagCompletionFunc("state", getStepStates)
 	runPipelineCmd.Flags().StringP("variables", "v", "", `Pipeline Variables [{ "key": "var1key",  "value": "var1value", "secured": true}]`)
 
 	getPipelineStep.Flags().StringP("pipelineId", "p", "", "Pipeline build number or id")
