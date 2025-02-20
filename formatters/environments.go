@@ -2,6 +2,7 @@ package formatters
 
 import (
 	"fmt"
+	"sort"
 )
 
 type Environment struct {
@@ -52,6 +53,9 @@ func FormatEnv(env Environment) string {
 }
 func FormatEnvs(envRes EnvResponse, grouped bool) string {
 	output := make(map[string]string)
+	sort.Slice(envRes.Values, func(i, j int) bool {
+		return envRes.Values[i].Name < envRes.Values[j].Name
+	})
 	for i := 0; i < len(envRes.Values); i++ {
 		env := envRes.Values[i]
 
