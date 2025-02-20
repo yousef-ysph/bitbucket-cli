@@ -336,8 +336,8 @@ var stopPipelineCmd = &cobra.Command{
 
 func getStepStates(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 
-	strategies := []string{constants.PIPELINE_FAILED, constants.PIPELINE_COMPLETED, constants.PIPELINE_IN_PROGRESS, constants.PIPELINE_SUCCESSFUL}
-	return strategies, cobra.ShellCompDirectiveDefault
+	states := []string{constants.PIPELINE_FAILED, constants.PIPELINE_COMPLETED, constants.PIPELINE_IN_PROGRESS, constants.PIPELINE_SUCCESSFUL}
+	return states, cobra.ShellCompDirectiveDefault
 
 }
 func init() {
@@ -356,7 +356,7 @@ func init() {
 
 	runPipelineCmd.RegisterFlagCompletionFunc("branch", githelper.GetBranchSuggestions)
 	runPipelineCmd.RegisterFlagCompletionFunc("pipeline", bitbucketapi.GetPipelineNames)
-	runPipelineCmd.RegisterFlagCompletionFunc("state", getStepStates)
+	pipelinesCmd.RegisterFlagCompletionFunc("state", getStepStates)
 	runPipelineCmd.Flags().StringP("variables", "v", "", `Pipeline Variables [{ "key": "var1key",  "value": "var1value", "secured": true}]`)
 
 	getPipelineStep.Flags().StringP("pipelineId", "p", "", "Pipeline build number or id")
