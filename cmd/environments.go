@@ -27,6 +27,26 @@ func getEnvPipeline(repo string, id string) formatters.PipelineDetailsResponse {
 
 }
 
+func filterEnvsByName(envResJson *formatters.EnvResponse, envName string) {
+
+	for _, env := range envResJson.Values {
+		if env.Name == envName {
+			envResJson.Values = []formatters.Environment{env}
+		}
+	}
+
+}
+
+func filterEnvsByType(envResJson *formatters.EnvResponse, envType string) {
+	envs := []formatters.Environment{}
+	for _, env := range envResJson.Values {
+		if env.EnvironmentType.Name == envType {
+			envs = append(envs, env)
+		}
+	}
+	envResJson.Values = envs
+}
+
 var environmentCmd = &cobra.Command{
 	Use:   "envs",
 	Short: "List environments",
@@ -51,9 +71,14 @@ var environmentCmd = &cobra.Command{
 		}
 		var envResJson formatters.EnvResponse
 		json.NewDecoder(envsRes.Body).Decode(&envResJson)
-		grouped, err := cmd.Flags().GetBool("grouped")
-		if err != nil {
-			grouped = false
+
+		envName, err := cmd.Flags().GetString("name")
+		envType, err := cmd.Flags().GetString("type")
+		if envName != "" && err == nil {
+			filterEnvsByName(&envResJson, envName)
+		}
+		if envType != "" && err == nil {
+			filterEnvsByType(&envResJson, envType)
 		}
 		if envsRes.StatusCode != 200 {
 			bodyText, _ := io.ReadAll(envsRes.Body)
@@ -84,7 +109,7 @@ var environmentCmd = &cobra.Command{
 		}
 
 		if !isCustomFormat {
-			fmt.Println(formatters.FormatEnvs(envResJson, grouped))
+			fmt.Println(formatters.FormatEnvs(envResJson))
 		}
 
 	},
@@ -93,9 +118,10 @@ var environmentCmd = &cobra.Command{
 func init() {
 	environmentCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")
 	environmentCmd.Flags().BoolP("json", "j", false, "Output as json")
-	environmentCmd.Flags().BoolP("grouped", "g", true, "Group enviroments by type")
 	environmentCmd.Flags().StringP("page", "p", "", "Page number for environments pagination")
 	environmentCmd.Flags().StringP("format", "f", "", "Output template format")
+	environmentCmd.Flags().StringP("name", "n", "", "Filter environments by name")
+	environmentCmd.Flags().StringP("type", "t", "", "Filter environments by type")
 
 	rootCmd.AddCommand(environmentCmd)
 

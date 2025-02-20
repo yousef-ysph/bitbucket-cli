@@ -51,21 +51,16 @@ type EnvResponse struct {
 func FormatEnv(env Environment) string {
 	return fmt.Sprintf("%s [%s] %s\n%s\n", env.Name, env.EnvironmentType.Name, env.Lock.Triggerer.PipelineUUID, FormatPipelineDetails(env.Pipeline))
 }
-func FormatEnvs(envRes EnvResponse, grouped bool) string {
+func FormatEnvs(envRes EnvResponse) string {
 	output := make(map[string]string)
 	sort.Slice(envRes.Values, func(i, j int) bool {
 		return envRes.Values[i].Name < envRes.Values[j].Name
 	})
-	for i := 0; i < len(envRes.Values); i++ {
-		env := envRes.Values[i]
 
-		if envString, ok := output[env.EnvironmentType.Name]; ok {
-
-			output[env.EnvironmentType.Name] = envString + "\n" + FormatEnv(env)
-		} else {
-			output[env.EnvironmentType.Name] = FormatEnv(env)
-		}
+	for _, env := range envRes.Values {
+		output[env.EnvironmentType.Name] += FormatEnv(env) + "\n"
 	}
+
 	outputString := ""
 	for envType, envDetails := range output {
 		outputString = outputString + envType + "\n===========\n" + envDetails + "\n"
