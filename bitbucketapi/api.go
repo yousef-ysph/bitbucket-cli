@@ -154,3 +154,30 @@ func FetchToChannelJson(method string, url string, data any, c chan FetchToChanR
 
 	FetchToChannel(method, url, data, "application/json", c)
 }
+
+type UrlQueryParam struct {
+	CmdFlag      string
+	DefaultValue string
+	ParamKey     string
+}
+
+type UrlQueryParams []UrlQueryParam
+
+func FormatUrlQueryParam(cmd *cobra.Command, urlParams UrlQueryParams) (string, error) {
+	queryParamString := ""
+	for _, urlParam := range urlParams {
+		if urlParam.CmdFlag == "" {
+			queryParamString += fmt.Sprintf("%s=%s&", urlParam.ParamKey, urlParam.DefaultValue)
+		}
+
+		paramValue, err := cmd.Flags().GetString(urlParam.CmdFlag)
+		if err != nil {
+			return queryParamString, err
+		}
+		if paramValue == "" {
+			paramValue = urlParam.DefaultValue
+		}
+		queryParamString += fmt.Sprintf("%s=%s&", urlParam.ParamKey, paramValue)
+	}
+	return queryParamString, nil
+}

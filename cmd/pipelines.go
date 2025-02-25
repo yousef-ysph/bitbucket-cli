@@ -18,6 +18,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var listPipelinesQueryParams = bitbucketapi.UrlQueryParams{
+	bitbucketapi.UrlQueryParam{CmdFlag: "page", DefaultValue: "1", ParamKey: "page"},
+	bitbucketapi.UrlQueryParam{CmdFlag:"limit", DefaultValue: "20", ParamKey: "pagelen"},
+	bitbucketapi.UrlQueryParam{CmdFlag:"order", DefaultValue: "-created_on", ParamKey: "sort"},
+}
+
 // pipelinesCmd represents the pipelines command
 func listPipelines(cmd *cobra.Command) {
 
@@ -26,11 +32,13 @@ func listPipelines(cmd *cobra.Command) {
 		fmt.Println(cliformat.Error("No repo provided and current directory doesn't have a git remote repo"))
 		return
 	}
-	page, err := cmd.Flags().GetString("page")
+	urlQueryParam, err := bitbucketapi.FormatUrlQueryParam(cmd, listPipelinesQueryParams)
+	
 	if err != nil {
-		page = "1"
+		fmt.Println(cliformat.Error(err.Error()))
+		return
 	}
-	resp, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", repo+"/pipelines?pagelen=20&sort=-created_on&page="+page, map[string]string{})
+	resp, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", repo+"/pipelines?"+urlQueryParam, map[string]string{})
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -343,7 +351,9 @@ func getStepStates(cmd *cobra.Command, args []string, toComplete string) ([]stri
 func init() {
 	rootCmd.AddCommand(pipelinesCmd)
 	pipelinesCmd.Flags().StringP("page", "p", "", "Page number for pipelines pagination")
+	pipelinesCmd.Flags().StringP("limit", "l", "", "Page length (pagelen) param")
 	pipelinesCmd.Flags().StringP("state", "s", "", "Stop by step with state {FAILED|IN_PROGRESS|SUCCESSFUL|COMPLETED}")
+	pipelinesCmd.Flags().StringP("order", "o", "", "Order by")
 	pipelinesCmd.Flags().StringP("format", "f", "", "Output template format")
 	pipelinesCmd.Flags().BoolP("json", "j", false, "Output as json")
 	pipelinesCmd.PersistentFlags().StringP("repo", "r", "", "Repo remote url")

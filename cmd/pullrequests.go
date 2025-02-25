@@ -164,24 +164,26 @@ func getPullRequestDetails(cmd *cobra.Command, args []string) {
 
 }
 
+var listPullRequestsQueryParams = bitbucketapi.UrlQueryParams{
+	bitbucketapi.UrlQueryParam{CmdFlag: "page", DefaultValue: "1", ParamKey: "page"},
+	bitbucketapi.UrlQueryParam{CmdFlag: "limit", DefaultValue: "20", ParamKey: "pagelen"},
+	bitbucketapi.UrlQueryParam{CmdFlag: "order", DefaultValue: "-created_on", ParamKey: "sort"},
+	bitbucketapi.UrlQueryParam{CmdFlag: "state", DefaultValue: "", ParamKey: "state"},
+}
+
 func listPullRequests(cmd *cobra.Command) {
 	repo, err := githelper.GetCurrentRepo(cmd)
 	if err != nil {
 		fmt.Println(cliformat.Error("No repo provided and current directory doesn't have a git remote repo"))
 		return
 	}
-	url := repo + "/pullrequests?pagelen=20&sort=-created_on"
-
-	state, err := cmd.Flags().GetString("state")
-	if err != nil || state != "" {
-		url = url + "&state=" + state
-
+	urlQueryParams, err := bitbucketapi.FormatUrlQueryParam(cmd, listPullRequestsQueryParams)
+	if err != nil {
+		fmt.Println(cliformat.Error(err.Error()))
 	}
-	page, err := cmd.Flags().GetString("page")
-	if err != nil || page != "" {
-		url = url + "&page=" + page
 
-	}
+	url := repo + "/pullrequests?" + urlQueryParams
+
 	resp, err := bitbucketapi.HttpRequestWithBitbucketAuthJson("GET", url, map[string]string{})
 
 	defer resp.Body.Close()
@@ -323,6 +325,8 @@ func init() {
 	pullRequestsCmd.Flags().StringP("page", "p", "", "Page number for pullreuest pagination")
 	pullRequestsCmd.Flags().StringP("format", "f", "", "Output template format")
 	pullRequestsCmd.Flags().BoolP("json", "j", false, "Output as json")
+	pullRequestsCmd.Flags().StringP("order", "o", "", "Order by")
+	pullRequestsCmd.Flags().StringP("limit", "l", "", "Page length (pagelen) param")
 	pullRequestsCmd.Flags().StringP("state", "s", "", "Pull request state")
 	pullRequestCreateCmd.Flags().StringP("source", "s", "", "Pull request source branch")
 	pullRequestCreateCmd.Flags().StringP("title", "t", "", "Pull request title")
